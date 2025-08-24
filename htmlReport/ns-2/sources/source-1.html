@@ -1,0 +1,230 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.htsc.transaction.demo.service</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionService (com.htsc.transaction.demo.service)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TransactionService</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (24/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (42/42)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.htsc.transaction.demo.service;
+&nbsp;
+&nbsp;import com.htsc.transaction.demo.exception.DuplicateTransactionException;
+&nbsp;import com.htsc.transaction.demo.exception.TransactionNotFoundException;
+&nbsp;import com.htsc.transaction.demo.model.PageResponse;
+&nbsp;import com.htsc.transaction.demo.model.dos.TransactionDO;
+&nbsp;import com.htsc.transaction.demo.model.request.TransactionCreateReq;
+&nbsp;import com.htsc.transaction.demo.model.request.TransactionUpdateReq;
+&nbsp;import com.htsc.transaction.demo.repository.TransactionRepository;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.beans.BeanUtils;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Date;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * @ author: chaote
+&nbsp; * @ date: 2025/8/20  22:29
+&nbsp; * @ &lt;p&gt;交易服务类&lt;p&gt;
+&nbsp; */
+&nbsp;@Service
+&nbsp;public class TransactionService {
+&nbsp;
+<b class="fc">&nbsp;    private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);</b>
+&nbsp;
+&nbsp;    private static final int MAX_PAGE_SIZE = 100;
+&nbsp;
+&nbsp;    private final TransactionRepository transactionRepository;
+&nbsp;
+<b class="fc">&nbsp;    public TransactionService(TransactionRepository transactionRepository) {</b>
+<b class="fc">&nbsp;        this.transactionRepository = transactionRepository;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean createTransaction(TransactionCreateReq req){
+<b class="fc">&nbsp;        logger.info(&quot;create transaction,trxId:{}&quot;,req.trxId());</b>
+<b class="fc">&nbsp;        if (transactionRepository.exist(req.trxId())){</b>
+<b class="fc">&nbsp;            throw new DuplicateTransactionException(req.trxId());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        TransactionDO transactionDO = new TransactionDO();</b>
+<b class="fc">&nbsp;        BeanUtils.copyProperties(req,transactionDO);</b>
+<b class="fc">&nbsp;        transactionDO.setTrxTime(new Date());</b>
+<b class="fc">&nbsp;        int count = transactionRepository.save(transactionDO);</b>
+<b class="fc">&nbsp;        return count &gt; 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public PageResponse&lt;TransactionDO&gt; selectPage(int currentPage,int pageSize){
+&nbsp;
+&nbsp;        //空
+<b class="fc">&nbsp;        if (currentPage &lt; 1 || pageSize &lt;=0){</b>
+<b class="fc">&nbsp;            return PageResponse.convertPage(new ArrayList&lt;&gt;(),currentPage,pageSize,0);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //最大页
+<b class="fc">&nbsp;        int limitedPageSize = Math.min(pageSize, MAX_PAGE_SIZE);</b>
+&nbsp;        //计算偏移量
+<b class="fc">&nbsp;        int offset = (currentPage - 1) * limitedPageSize;</b>
+&nbsp;
+<b class="fc">&nbsp;        int totalElements = transactionRepository.size();</b>
+&nbsp;
+<b class="fc">&nbsp;        if (offset &gt;= totalElements) {</b>
+<b class="fc">&nbsp;            return PageResponse.convertPage(new ArrayList&lt;&gt;(), currentPage, limitedPageSize, totalElements);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;TransactionDO&gt; transactionDO = transactionRepository.selectPage(offset,limitedPageSize);</b>
+<b class="fc">&nbsp;        return PageResponse.convertPage(transactionDO,currentPage,limitedPageSize,totalElements);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TransactionDO selectOne(String trxId){
+<b class="fc">&nbsp;        TransactionDO transactionDO = transactionRepository.selectOne(trxId);</b>
+<b class="fc">&nbsp;        if (transactionDO == null){</b>
+<b class="fc">&nbsp;            return new TransactionDO() ;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return transactionDO;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean deleteTransaction(String trxId){
+<b class="fc">&nbsp;        logger.info(&quot;delete transaction,trxId:{}&quot;,trxId);</b>
+&nbsp;        //删除是个高风险操作，一般需要校验
+<b class="fc">&nbsp;        checkLegality(trxId);</b>
+<b class="fc">&nbsp;        if (!transactionRepository.exist(trxId)){</b>
+<b class="fc">&nbsp;            throw new TransactionNotFoundException(trxId);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        int count = transactionRepository.deletedById(trxId);</b>
+<b class="fc">&nbsp;        return count &gt; 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public boolean updateTransaction(String trxId,TransactionUpdateReq req){
+<b class="fc">&nbsp;        logger.info(&quot;update transaction,trxId:{}&quot;,trxId);</b>
+<b class="fc">&nbsp;        if (!transactionRepository.exist(trxId)){</b>
+<b class="fc">&nbsp;            throw new TransactionNotFoundException(trxId);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        TransactionDO oldValue = transactionRepository.selectOne(trxId);</b>
+<b class="fc">&nbsp;        oldValue.setTrxId(trxId);</b>
+<b class="fc">&nbsp;        if (req.amount() != null){</b>
+<b class="fc">&nbsp;            oldValue.setAmount(req.amount());</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (req.status() != null){</b>
+<b class="fc">&nbsp;            oldValue.setStatus(req.status());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        int count = transactionRepository.updateById(oldValue);</b>
+<b class="fc">&nbsp;        return count &gt; 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void checkLegality(String trxId) {
+&nbsp;        //todo
+&nbsp;        //根据业务规则校验合法合规性，比如某种状态下不允许删除等
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-08-24 10:47</div>
+</div>
+</body>
+</html>

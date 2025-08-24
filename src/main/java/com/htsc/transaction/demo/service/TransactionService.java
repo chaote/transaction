@@ -35,9 +35,9 @@ public class TransactionService {
     }
 
     public boolean createTransaction(TransactionCreateReq req){
-        logger.info("create transaction,trxId:{}",req.getTrxId());
-        if (transactionRepository.exist(req.getTrxId())){
-            throw new DuplicateTransactionException(req.getTrxId());
+        logger.info("create transaction,trxId:{}",req.trxId());
+        if (transactionRepository.exist(req.trxId())){
+            throw new DuplicateTransactionException(req.trxId());
         }
         TransactionDO transactionDO = new TransactionDO();
         BeanUtils.copyProperties(req,transactionDO);
@@ -69,11 +69,16 @@ public class TransactionService {
     }
 
     public TransactionDO selectOne(String trxId){
-        return transactionRepository.selectOne(trxId);
+        TransactionDO transactionDO = transactionRepository.selectOne(trxId);
+        if (transactionDO == null){
+            return new TransactionDO() ;
+        }
+        return transactionDO;
     }
 
     public boolean deleteTransaction(String trxId){
         logger.info("delete transaction,trxId:{}",trxId);
+        //删除是个高风险操作，一般需要校验
         checkLegality(trxId);
         if (!transactionRepository.exist(trxId)){
             throw new TransactionNotFoundException(trxId);
@@ -90,11 +95,11 @@ public class TransactionService {
 
         TransactionDO oldValue = transactionRepository.selectOne(trxId);
         oldValue.setTrxId(trxId);
-        if (req.getAmount() != null){
-            oldValue.setAmount(req.getAmount());
+        if (req.amount() != null){
+            oldValue.setAmount(req.amount());
         }
-        if (req.getStatus() != null){
-            oldValue.setStatus(req.getStatus());
+        if (req.status() != null){
+            oldValue.setStatus(req.status());
         }
 
         int count = transactionRepository.updateById(oldValue);

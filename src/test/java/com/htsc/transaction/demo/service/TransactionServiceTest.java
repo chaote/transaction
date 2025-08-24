@@ -21,14 +21,8 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
@@ -48,14 +42,18 @@ class TransactionServiceTest {
     void setUp() {
         trxId = "TRX123456789";
 
-        transactionCreateReq = new TransactionCreateReq();
-        transactionCreateReq.setTrxId(trxId);
-        transactionCreateReq.setAmount(new BigDecimal("100.50"));
-        transactionCreateReq.setStatus("PENDING");
+        transactionCreateReq = new TransactionCreateReq(
+                trxId,
+                new BigDecimal("100.50"),
+                "PENDING",
+                null,
+                null
+        );
 
-        transactionUpdateReq = new TransactionUpdateReq();
-        transactionUpdateReq.setAmount(new BigDecimal("200.75"));
-        transactionUpdateReq.setStatus("COMPLETED");
+        transactionUpdateReq = new TransactionUpdateReq(
+                new BigDecimal("150.25"),
+                "COMPLETED"
+        );
 
         transactionDO = new TransactionDO();
         transactionDO.setTrxId(trxId);
@@ -208,6 +206,22 @@ class TransactionServiceTest {
     }
 
     @Test
+    void selectOne_NotExists() {
+        // Arrange
+        when(transactionRepository.selectOne(trxId)).thenReturn(null);
+
+        TransactionDO result = transactionService.selectOne(trxId);
+
+        assertNotNull(result);
+        assertNull(result.getTrxId());
+        assertNull(result.getAmount());
+        assertNull(result.getStatus());
+
+        // Assert
+        verify(transactionRepository, times(1)).selectOne(trxId);
+    }
+
+    @Test
     void deleteTransaction_ReturnTrue() {
         // Arrange
         when(transactionRepository.exist(trxId)).thenReturn(true);
@@ -295,10 +309,13 @@ class TransactionServiceTest {
     }
 
     @Test
-    void updateTransaction_OnlyUpdateProvidedFields() {
+    void updateTransaction_OnlyUpdateAmount() {
         // Arrange
-        TransactionUpdateReq partialUpdateReq = new TransactionUpdateReq();
-        partialUpdateReq.setAmount(new BigDecimal("150.25"));
+        TransactionUpdateReq partialUpdateReq = new TransactionUpdateReq(
+                new BigDecimal("150.25"),
+                null
+        );
+
 
         when(transactionRepository.exist(trxId)).thenReturn(true);
         when(transactionRepository.selectOne(trxId)).thenReturn(transactionDO);
@@ -314,5 +331,30 @@ class TransactionServiceTest {
 
         assertEquals("PENDING", transactionDO.getStatus());
         assertEquals(new BigDecimal("150.25"), transactionDO.getAmount());
+    }
+
+    @Test
+    void updateTransaction_OnlyUpdateStatus() {
+        // Arrange
+        TransactionUpdateReq partialUpdateReq = new TransactionUpdateReq(
+                null,
+                "COMPLETED"
+        );
+
+
+        when(transactionRepository.exist(trxId)).thenReturn(true);
+        when(transactionRepository.selectOne(trxId)).thenReturn(transactionDO);
+        when(transactionRepository.updateById(any(TransactionDO.class))).thenReturn(1);
+
+        // Act
+        boolean result = transactionService.updateTransaction(trxId, partialUpdateReq);
+
+        assertTrue(result);
+        verify(transactionRepository).exist(trxId);
+        verify(transactionRepository).selectOne(trxId);
+        verify(transactionRepository).updateById(any(TransactionDO.class));
+
+        assertEquals("COMPLETED", transactionDO.getStatus());
+        assertEquals(new BigDecimal("100.50"), transactionDO.getAmount());
     }
 }

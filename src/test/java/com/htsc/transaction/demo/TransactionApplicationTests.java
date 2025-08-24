@@ -4,14 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DemoApplicationTests {
+class TransactionApplicationTests {
 
 	@Test
 	void contextLoads() {
-
-		int q = 2;
-		int w = 3;
-		System.out.println(q*w);
 	}
 
 }

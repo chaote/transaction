@@ -47,12 +47,9 @@ class TransactionControllerTest {
     @Test
     void create_ReturnSuccess() throws Exception {
         // Arrange
-        TransactionCreateReq request = new TransactionCreateReq();
-        request.setTrxId(trxId);
-        request.setAmount(new BigDecimal("100.50"));
-        request.setStatus("PENDING");
-        request.setType("CASH");
-        request.setUserId("user001");
+        TransactionCreateReq request = new TransactionCreateReq(
+                trxId,new BigDecimal("100.50"),"PENDING","CASH","user001"
+        );
 
         when(transactionService.createTransaction(any(TransactionCreateReq.class))).thenReturn(true);
 
@@ -69,12 +66,9 @@ class TransactionControllerTest {
     @Test
     void create_ReturnError_DuplicateException() throws Exception {
         // Arrange
-        TransactionCreateReq request = new TransactionCreateReq();
-        request.setTrxId(trxId);
-        request.setAmount(new BigDecimal("100.50"));
-        request.setStatus("PENDING");
-        request.setType("CASH");
-        request.setUserId("user001");
+        TransactionCreateReq request = new TransactionCreateReq(
+                trxId,new BigDecimal("100.50"),"PENDING","CASH","user001"
+        );
 
         when(transactionService.createTransaction(any(TransactionCreateReq.class)))
                 .thenThrow(new DuplicateTransactionException(trxId));
@@ -199,9 +193,10 @@ class TransactionControllerTest {
     @Test
     void update_ReturnSuccess() throws Exception {
         // Arrange
-        TransactionUpdateReq request = new TransactionUpdateReq();
-        request.setAmount(new BigDecimal("150.25"));
-        request.setStatus("COMPLETED");
+        TransactionUpdateReq request = new TransactionUpdateReq(
+                new BigDecimal("150.25"),
+                "COMPLETED"
+        );
 
         when(transactionService.updateTransaction(eq(trxId), any(TransactionUpdateReq.class))).thenReturn(true);
 
@@ -218,9 +213,10 @@ class TransactionControllerTest {
     @Test
     void update_ReturnError_NotFoundException() throws Exception {
         // Arrange
-        TransactionUpdateReq request = new TransactionUpdateReq();
-        request.setAmount(new BigDecimal("150.25"));
-        request.setStatus("COMPLETED");
+        TransactionUpdateReq request = new TransactionUpdateReq(
+                new BigDecimal("150.25"),
+                "COMPLETED"
+        );
 
         when(transactionService.updateTransaction(eq(trxId), any(TransactionUpdateReq.class)))
                 .thenThrow(new TransactionNotFoundException(trxId));
