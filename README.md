@@ -17,7 +17,7 @@
 ## 外部依赖项
 org.springframework.boot:spring-boot-starter-web:3.2.3          提供web容器\
 org.springframework.boot:spring-boot-starter-validation:3.2.3   用作请求参数校验\
-org.springframework.boot:spring-boot-starter-test:3.2.3         用作单元测试\
+org.springframework.boot:spring-boot-starter-test:3.2.3         用作单元测试
 
 ## 启动方式
 idea本地启动：默认端口：8080
